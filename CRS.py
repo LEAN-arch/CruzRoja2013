@@ -1,6 +1,6 @@
-# cruz_roja_dashboard_espanol.py
+# cruz_roja_dashboard_espanol_final_v3.py
 # El tablero de control definitivo, mejorado con IA, basado en el Diagnóstico Situacional de 2013 de la Cruz Roja Tijuana.
-# Esta versión está completa, sin abreviar, y traducida al español.
+# Esta versión está completa, sin abreviar, y traducida al español, con todos los errores corregidos.
 
 import streamlit as st
 import pandas as pd
@@ -13,8 +13,8 @@ from sklearn.linear_model import LinearRegression
 
 # --- Configuración de la Página ---
 st.set_page_config(
-    page_title="Cruz Roja Tijuana - Centro de Mando Estratégico con IA",
-    page_icon="➕",  # Ícono de cruz roja
+    page_title="Cruz Roja Tijuana - Centro de Mando Estratégico",
+    page_icon="➕",
     layout="wide",
 )
 
@@ -37,13 +37,29 @@ def load_and_simulate_data():
         "monthly_operating_costs": pd.DataFrame({'Mes': ['Oct','Nov','Dic','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep'], 'Médico': [3482131,3473847,3667978,2775683,2564990,2778673,3177997,2696104,2502781,2912605,3275804,3155497], 'Socorros': [2127730,2651096,2076126,1996603,2039858,1862567,2301656,1914002,1952308,2210602,2321977,1936905]}),
         "weekly_costs": pd.DataFrame({"Categoría": ["Área Médica", "Socorros"], "Salario Normal": [219139, 183169], "Horas Extra": [17081, 53914]}),
         "cost_per_patient_type": pd.DataFrame([{'Tipo': 'Fallecido al Arribar', 'Costo': 792.77}, {'Tipo': 'Leve', 'Costo': 814.80}, {'Tipo': 'No Crítico', 'Costo': 840.62}, {'Tipo': 'Crítico (Trauma)', 'Costo': 1113.81}, {'Tipo': 'Crítico (Médico)', 'Costo': 1164.57}]),
+        "cost_per_patient_area": pd.DataFrame([{'Área': 'Urgencias (Grupo I)', 'Costo': 902.04}, {'Área': 'Urgencias (Grupo II)', 'Costo': 1031.31}, {'Área': 'Urgencias (Grupo III)', 'Costo': 1434.81}, {'Área': 'Hospital', 'Costo': 1072.64}, {'Área': 'Pediatría', 'Costo': 967.92}, {'Área': 'UCI', 'Costo': 2141.39}]),
         "c4_call_summary": pd.DataFrame([{"Categoría": "Llamadas Reales", "Valor": 21.8}, {"Categoría": "Llamadas de Broma", "Valor": 10.9}, {"Categoría": "Incompletas", "Valor": 56.7}, {"Categoría": "Info. Ciudadana", "Valor": 10.6}]),
         "data_integrity_gap": {'values': [42264, 40809, 31409], 'stages': ["Llamadas Despachadas (C4)", "Servicios en Bitácora", "Reportes de Paciente (FRAP)"]},
         "patient_acuity_prehospital": pd.DataFrame([{"Categoría": "Leve", "Porcentaje": 67.3}, {"Categoría": "No Crítico", "Porcentaje": 19.5}, {"Categoría": "Crítico", "Porcentaje": 3.3}]),
         "response_time_by_base": pd.DataFrame({"Base": ["Base 10", "Base 8", "Base 4", "Base 11", "Base 58", "Base 0"], "Tiempo Promedio (min)": [17.17, 15.17, 14.85, 14.35, 12.90, 12.22]}),
-        "hospital_kpis": {"er_patients_annual": 33010, "avg_er_wait_time": "23:27", "avg_bed_occupancy_er": 45.4},
+        "hospital_service_volume": pd.DataFrame([{"Área": "Hospitalizados", "Pacientes": 650}, {"Área": "Pediatría", "Pacientes": 206}, {"Área": "Cuarto Rojo (Críticos)", "Pacientes": 95}, {"Área": "UCI", "Pacientes": 56}]),
+        "er_bed_occupancy_monthly": pd.DataFrame({'Mes': ['Oct','Nov','Dic','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep'], 'Ocupación (%)': [40.5, 45.0, 47.2, 44.7, 43.3, 46.6, 49.3, 49.9, 43.7, 48.9, 44.2, 45.0]}),
+        "hospital_kpis": {"er_patients_annual": 33010, "avg_er_wait_time": "23:27", "avg_bed_occupancy_er": 45.4, "er_compliance_score": 87, "er_specialized_compliance": 95},
         "certification_data": {'Doctores_ATLS': 13, 'Paramédicos_ACLS': 67, 'Enfermeras_ACLS': 16},
         "disaster_readiness": {"Hospital Safety Index": "C (Acción Urgente Requerida)"},
+        "staff_sentiment": {'strengths': {'Paramédico': 'Servicios Ofrecidos (59%)'},'opportunities': {'Paramédico': 'Salario (45%)'},'motivation': {'Paramédico': 'Salario (69%)'}},
+        "patient_sentiment": {'satisfaction_score': 8.6, 'main_reason': 'Accidente (50%)', 'improvement_area': 'Información y Cortesía (26% cada uno)'},
+        "ambulance_fleet_analysis": pd.DataFrame([
+            {'Unidad': 175, 'Marca': 'Mercedes', 'CostoPorServicio': 178.34, 'Servicios': 722, 'CargaMantenimiento%': 87.4},
+            {'Unidad': 163, 'Marca': 'Volkswagen', 'CostoPorServicio': 165.96, 'Servicios': 638, 'CargaMantenimiento%': 78.3},
+            {'Unidad': 169, 'Marca': 'Volkswagen', 'CostoPorServicio': 157.78, 'Servicios': 1039, 'CargaMantenimiento%': 25.7},
+            {'Unidad': 170, 'Marca': 'Volkswagen', 'CostoPorServicio': 130.41, 'Servicios': 1048, 'CargaMantenimiento%': 25.6},
+            {'Unidad': 176, 'Marca': 'Mercedes', 'CostoPorServicio': 120.73, 'Servicios': 676, 'CargaMantenimiento%': 97.1},
+            {'Unidad': 167, 'Marca': 'Nissan', 'CostoPorServicio': 114.04, 'Servicios': 677, 'CargaMantenimiento%': 2.3},
+            {'Unidad': 196, 'Marca': 'Peugeot', 'CostoPorServicio': 110.00, 'Servicios': 663, 'CargaMantenimiento%': 16.9},
+            {'Unidad': 183, 'Marca': 'Ford', 'CostoPorServicio': 100.28, 'Servicios': 1620, 'CargaMantenimiento%': 6.7},
+            {'Unidad': 184, 'Marca': 'Ford', 'CostoPorServicio': 98.17, 'Servicios': 1164, 'CargaMantenimiento%': 1.9},
+        ])
     }
     
     er_visits_monthly = [2829, 2548, 2729, 2780, 2306, 2775, 2744, 2774, 2754, 2934, 2985, 2852]
@@ -69,6 +85,17 @@ def get_prophet_forecast(_df, days_to_forecast=30):
     df_prophet = _df.rename(columns={'date': 'ds', 'visits': 'y'}); model = Prophet(yearly_seasonality=True, daily_seasonality=False, weekly_seasonality=True).fit(df_prophet)
     future = model.make_future_dataframe(periods=days_to_forecast); return model.predict(future)
 
+def predict_resource_hotspots(df: pd.DataFrame):
+    if df.empty: return pd.DataFrame()
+    last_7_days = df[df['date'] >= df['date'].max() - timedelta(days=7)];
+    if last_7_days.empty: return pd.DataFrame()
+    weekly_proportions = last_7_days['diagnosis'].value_counts(normalize=True); total_predicted_visits = int(last_7_days['visits'].sum() * np.random.uniform(0.9, 1.1))
+    predicted_cases = (weekly_proportions * total_predicted_visits).round().astype(int)
+    resource_map = {"Trauma": "Férulas/Vendas", "Enfermedad": "Kits IV", "Cardíaco": "Electrodos EKG", "Ginecológico": "Kits Obstetricia", "Pediátrico": "Insumos Pediátricos", "Lesión Menor": "Botiquín Básico"}
+    hotspots_df = predicted_cases.reset_index(); hotspots_df.columns = ['diagnosis', 'predicted_cases']
+    hotspots_df['resource_needed'] = hotspots_df['diagnosis'].map(resource_map)
+    return hotspots_df.sort_values('predicted_cases', ascending=False)
+
 def analyze_wait_time_drivers(df: pd.DataFrame):
     if df.empty or df.shape[0] < 10: return pd.DataFrame()
     df_drivers = pd.get_dummies(df[['wait_time_min', 'visits', 'diagnosis', 'acuity']], columns=['diagnosis'], drop_first=True); X = df_drivers.drop('wait_time_min', axis=1); y = df_drivers['wait_time_min']
@@ -83,9 +110,8 @@ st.title("Centro de Mando Estratégico con IA: Cruz Roja Tijuana")
 st.markdown("_Un tablero digital definitivo que integra el diagnóstico de 2013 con análisis predictivo para máxima accionabilidad._")
 st.divider()
 
-tabs = st.tabs(["📈 **Resumen Ejecutivo**", "🔮 **Análisis Predictivo (IA)**", "💰 **Salud Financiera**", "🚑 **Operaciones Prehospitalarias**", "🏥 **Servicios Hospitalarios**", "📋 **Recomendaciones**"])
+tabs = st.tabs(["📈 **Resumen Ejecutivo**", "🔮 **Análisis Predictivo**", "🏙️ **Población y Contexto**", "💰 **Salud Financiera y Optimización**", "🚑 **Operaciones Prehospitalarias**", "🏥 **Servicios Hospitalarios**", "👥 **RRHH y Sentimiento**", "📋 **Recomendaciones**"])
 
-# ============================ TAB 0: RESUMEN EJECUTIVO ============================
 with tabs[0]:
     st.header("Hallazgos Clave y Riesgos Estratégicos (Informe 2013)")
     st.info("Este tablero sintetiza el informe de 111 páginas en perspectivas accionables, aumentadas con capacidades predictivas.", icon="💡")
@@ -107,25 +133,23 @@ with tabs[0]:
         fig_gap = go.Figure(go.Funnel(y=original_data['data_integrity_gap']['stages'], x=original_data['data_integrity_gap']['values'], textinfo="value+percent previous", marker={"color": [PRIMARY_COLOR, ACCENT_COLOR_WARN, ACCENT_COLOR_BAD]}))
         fig_gap.update_layout(title_text="23% de Servicios sin Reporte de Paciente (FRAP)", title_x=0.5, margin=dict(t=50, b=10, l=10, r=10), template=PLOTLY_TEMPLATE); st.plotly_chart(fig_gap, use_container_width=True)
 
-# ============================ TAB 1: ANÁLISIS PREDICTIVO (IA) ============================
 with tabs[1]:
     st.header("🔮 Central de Análisis Predictivo con IA")
     st.subheader("Pronóstico Interactivo de Capacidad y Personal")
     col1, col2 = st.columns([2, 1], gap="large")
     with col1:
         st.markdown("#### Demanda de Pacientes Proyectada")
-        forecast_days = st.slider("Días a Pronosticar:", 7, 90, 30, key="forecast_days")
+        forecast_days = st.slider("Días a Pronosticar:", 7, 90, 30, key="forecast_days", help="Seleccione el horizonte de tiempo para el pronóstico de demanda de pacientes.")
         forecast_df = get_prophet_forecast(daily_df, forecast_days)
-        fig_forecast = go.Figure(); fig_forecast.add_trace(go.Scatter(x=forecast_df['ds'], y=forecast_df['yhat_upper'], fill=None, mode='lines', line_color='rgba(0,123,255,0.2)', name='Rango de Incertidumbre')); fig_forecast.add_trace(go.Scatter(x=forecast_df['ds'], y=forecast_df['yhat_lower'], fill='tonexty', mode='lines', line_color='rgba(0,123,255,0.2)')); fig_forecast.add_trace(go.Scatter(x=daily_df['date'], y=daily_df['visits'], mode='markers', name='Datos Históricos', marker=dict(color='black', opacity=0.6, size=4))); fig_forecast.add_trace(go.Scatter(x=forecast_df['ds'], y=forecast_df['yhat'], mode='lines', name='Pronóstico', line=dict(color=PRIMARY_COLOR, width=3))); fig_forecast.update_layout(xaxis_title="Fecha", yaxis_title="Visitas Diarias a Urgencias", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1), template=PLOTLY_TEMPLATE); st.plotly_chart(fig_forecast, use_container_width=True)
+        fig_forecast = go.Figure(); fig_forecast.add_trace(go.Scatter(x=forecast_df['ds'], y=forecast_df['yhat_upper'], fill=None, mode='lines', line_color='rgba(206,17,38,0.2)', name='Rango de Incertidumbre')); fig_forecast.add_trace(go.Scatter(x=forecast_df['ds'], y=forecast_df['yhat_lower'], fill='tonexty', mode='lines', line_color='rgba(206,17,38,0.2)')); fig_forecast.add_trace(go.Scatter(x=daily_df['date'], y=daily_df['visits'], mode='markers', name='Datos Históricos', marker=dict(color='black', opacity=0.6, size=4))); fig_forecast.add_trace(go.Scatter(x=forecast_df['ds'], y=forecast_df['yhat'], mode='lines', name='Pronóstico', line=dict(color=PRIMARY_COLOR, width=3))); fig_forecast.update_layout(xaxis_title="Fecha", yaxis_title="Visitas Diarias a Urgencias", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1), template=PLOTLY_TEMPLATE); st.plotly_chart(fig_forecast, use_container_width=True)
     with col2:
         st.markdown("#### Escenario de Personal (Simulador)")
-        available_fte = st.slider("Número de Médicos Disponibles (FTE):", 1.0, 20.0, 10.0, 0.5)
+        available_fte = st.slider("Número de Médicos Disponibles (FTE):", 1.0, 20.0, 10.0, 0.5, help="Simule el impacto de tener más o menos personal clínico disponible.")
         future_forecast = forecast_df[forecast_df['ds'] > daily_df['date'].max()]; required_fte = (future_forecast['yhat'].sum() * 20) / 60 / (8 * forecast_days) if forecast_days > 0 else 0; fte_deficit = required_fte - available_fte; utilization_pct = (required_fte / available_fte * 100) if available_fte > 0 else 500
-        fig_gauge = go.Figure(go.Indicator(mode="gauge+number", value=utilization_pct, title={'text': f"Utilización de Personal Proyectada<br><span style='font-size:0.8em;color:gray'>Se requieren {required_fte:.1f} FTE</span>"}, number={'suffix': '%'}, gauge={'axis': {'range': [None, 120]}, 'bar': {'color': ACCENT_COLOR_WARN if utilization_pct < 100 else ACCENT_COLOR_BAD},'steps': [{'range': [0, 85], 'color': ACCENT_COLOR_GOOD}],'threshold': {'line': {'color': "red", 'width': 4}, 'thickness': 1, 'value': 100}})); st.plotly_chart(fig_gauge, use_container_width=True)
+        fig_gauge = go.Figure(go.Indicator(mode="gauge+number", value=utilization_pct, title={'text': f"Utilización de Personal Proyectada"}, number={'suffix': '%'}, gauge={'axis': {'range': [None, 120]}, 'bar': {'color': ACCENT_COLOR_WARN if utilization_pct < 100 else ACCENT_COLOR_BAD},'steps': [{'range': [0, 85], 'color': ACCENT_COLOR_GOOD}],'threshold': {'line': {'color': "red", 'width': 4}, 'thickness': 1, 'value': 100}})); st.plotly_chart(fig_gauge, use_container_width=True)
         if utilization_pct > 100: st.error(f"**Alerta de Sobrecapacidad:** La carga de trabajo proyectada requiere **{required_fte - available_fte:.1f} FTEs adicionales**.", icon="🔴")
         else: st.success(f"**Capacidad Saludable:** El personal es suficiente para la demanda proyectada.")
 
-# ============================ TAB 2: POBLACIÓN & CONTEXTO ============================
 with tabs[2]:
     st.header("🏙️ Población y Contexto")
     col1, col2 = st.columns(2);
@@ -134,7 +158,6 @@ with tabs[2]:
     with col2:
         st.subheader("Población por Grado de Marginación"); st.plotly_chart(px.pie(original_data['marginalization_data'], names='Nivel', values='Porcentaje', title="~60% de la Población en Pobreza Media a Alta"), use_container_width=True); st.caption("Fuente: Figura 2, p. 22")
 
-# ============================ TAB 3: SALUD FINANCIERA Y OPTIMIZACIÓN ============================
 with tabs[3]:
     st.header("💰 Salud Financiera y Optimización de Recursos")
     st.subheader("Fuentes de Financiamiento y Costos Operativos")
@@ -149,14 +172,13 @@ with tabs[3]:
     with opt_col1:
         st.markdown("#### Eficiencia de la Flota de Ambulancias")
         df_fleet = original_data['ambulance_fleet_analysis']
-        fig_fleet = px.scatter(df_fleet, x='Services', y='CostPerService', size='MaintBurdenPct', color='Brand', hover_name='Unit', size_max=40, title="Análisis de Flota: Carga de Trabajo vs. Costo por Servicio", labels={'Services': 'Total de Servicios Atendidos', 'CostPerService': 'Costo por Servicio (MXN)'}); fig_fleet.update_layout(template=PLOTLY_TEMPLATE, legend_title_text='Marca de Ambulancia'); st.plotly_chart(fig_fleet, use_container_width=True); st.caption("El tamaño de la burbuja representa la carga de mantenimiento (% del costo inicial). Burbujas más grandes son peores.")
+        fig_fleet = px.scatter(df_fleet, x='Servicios', y='CostoPorServicio', size='CargaMantenimiento%', color='Marca', hover_name='Unidad', size_max=40, title="Análisis de Flota: Carga de Trabajo vs. Costo por Servicio", labels={'Servicios': 'Total de Servicios Atendidos', 'CostoPorServicio': 'Costo por Servicio (MXN)'}); fig_fleet.update_layout(template=PLOTLY_TEMPLATE, legend_title_text='Marca de Ambulancia'); st.plotly_chart(fig_fleet, use_container_width=True); st.caption("El tamaño de la burbuja representa la carga de mantenimiento (% del costo inicial). Burbujas más grandes son peores.")
     with opt_col2:
         st.markdown("#### Costos de Material por Gravedad del Paciente")
-        df_mat = original_data['material_cost_per_acuity'].rename(columns={'Acuity': 'Gravedad', 'Material Cost': 'Costo de Material'})
-        fig_mat = px.bar(df_mat, x='Costo de Material', y='Gravedad', orientation='h', title="Pacientes Críticos Impulsan Costos de Material", text='Costo de Material'); fig_mat.update_traces(texttemplate='$%{text:,.2f}', textposition='inside', marker_color=PRIMARY_COLOR); fig_mat.update_layout(template=PLOTLY_TEMPLATE, xaxis_title="Costo Promedio de Material por Llamada (MXN)", yaxis_title=None); st.plotly_chart(fig_mat, use_container_width=True)
+        df_mat = original_data['material_cost_per_acuity']
+        fig_mat = px.bar(df_mat, x='Costo Material', y='Gravedad', orientation='h', title="Pacientes Críticos Impulsan Costos de Material", text='Costo Material'); fig_mat.update_traces(texttemplate='$%{text:,.2f}', textposition='inside', marker_color=PRIMARY_COLOR); fig_mat.update_layout(template=PLOTLY_TEMPLATE, xaxis_title="Costo Promedio de Material por Llamada (MXN)", yaxis_title=None); st.plotly_chart(fig_mat, use_container_width=True)
         st.warning("**Accionabilidad:** Enfocar el control de inventario y la cadena de suministro en artículos de alto costo para cuidados críticos.")
 
-# ============================ TAB 4: OPERACIONES PREHOSPITALARIAS ============================
 with tabs[4]:
     st.header("🚑 Operaciones Prehospitalarias")
     col1, col2 = st.columns(2)
@@ -168,9 +190,8 @@ with tabs[4]:
         st.plotly_chart(px.pie(original_data['patient_acuity_prehospital'], names='Categoría', values='Porcentaje', title="67% de los Pacientes Atendidos son Leves"), use_container_width=True)
     st.divider()
     st.subheader("Tiempo de Respuesta por Base de Ambulancias")
-    st.plotly_chart(px.bar(original_data['response_time_by_base'].rename(columns={'Avg Response Time (min)': 'Tiempo Promedio (min)'}), y="Base", x="Tiempo Promedio (min)", orientation='h', title="Tiempos de Respuesta Varían Significativamente por Base", text="Tiempo Promedio (min)").update_traces(texttemplate='%{text:.1f} min', textposition='inside'), use_container_width=True)
+    st.plotly_chart(px.bar(original_data['response_time_by_base'].sort_values("Tiempo Promedio (min)"), y="Base", x="Tiempo Promedio (min)", orientation='h', title="Tiempos de Respuesta Varían Significativamente por Base", text="Tiempo Promedio (min)").update_traces(texttemplate='%{text:.1f} min', textposition='inside'), use_container_width=True)
 
-# ============================ TAB 5: SERVICIOS HOSPITALARIOS ============================
 with tabs[5]:
     st.header("🏥 Servicios Hospitalarios")
     kpis = original_data['hospital_kpis']
@@ -180,16 +201,15 @@ with tabs[5]:
     st.progress(kpis['er_compliance_score'], text=f"Puntuación de Cumplimiento General de Urgencias: {kpis['er_compliance_score']}%")
     st.progress(kpis['er_specialized_compliance'], text=f"Puntuación de Cumplimiento de Equipo Especializado: {kpis['er_specialized_compliance']}%")
 
-# ============================ TAB 6: RH Y SENTIMIENTO ============================
 with tabs[6]:
-    st.header("👥 Recursos Humanos y Sentimiento de las Partes Interesadas")
+    st.header("👥 Recursos Humanos y Sentimiento")
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Encuestas a Personal y Pacientes")
         st.markdown("##### Sentimiento del Personal (Fuente: p. 96-99)")
-        st.info(f"**Principal Fortaleza:** {original_data['staff_sentiment']['strengths']['Paramedic']}")
-        st.warning(f"**Principal Oportunidad de Mejora:** {original_data['staff_sentiment']['opportunities']['Paramedic']}")
-        st.error(f"**Principal Motivador:** {original_data['staff_sentiment']['motivation']['Paramedic']}")
+        st.info(f"**Principal Fortaleza:** {original_data['staff_sentiment']['strengths']['Paramédico']}")
+        st.warning(f"**Principal Oportunidad de Mejora:** {original_data['staff_sentiment']['opportunities']['Paramédico']}")
+        st.error(f"**Principal Motivador:** {original_data['staff_sentiment']['motivation']['Paramédico']}")
     with col2:
         st.markdown("##### Sentimiento del Paciente (Fuente: p. 103-104)")
         st.info(f"**Satisfacción General:** Alta, con una calificación promedio de **{original_data['patient_sentiment']['satisfaction_score']}/10**.")
@@ -204,11 +224,10 @@ with tabs[6]:
     with colB:
         st.warning("**Alta Carga de Horas Extra**", icon="⏱️")
         weekly_cost_df = original_data['weekly_costs']
-        paramedic_overtime_pct = (weekly_cost_df[weekly_cost_df['Category']=='Paramedic']['Overtime'].iloc[0] / weekly_cost_df[weekly_cost_df['Category']=='Paramedic']['Normal'].iloc[0]) * 100
+        paramedic_overtime_pct = (weekly_cost_df[weekly_cost_df['Categoría']=='Socorros']['Horas Extra'].iloc[0] / weekly_cost_df[weekly_cost_df['Categoría']=='Socorros']['Salario Normal'].iloc[0]) * 100
         st.metric("Horas Extra de Socorros como % del Salario Normal", f"{paramedic_overtime_pct:.1f}%")
         st.caption("Un alto nivel de horas extra es un indicador principal de agotamiento y rotación de personal.")
 
-# ============================ TAB 7: RECOMENDACIONES ============================
 with tabs[7]:
     st.header("📋 Resumen de Recomendaciones del Informe")
     st.markdown("Una lista completa de recomendaciones accionables a corto y largo plazo propuestas en el informe de 2013.")
