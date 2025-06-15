@@ -1,6 +1,6 @@
-# cruz_roja_dashboard_espanol_final_v3.py
+# cruz_roja_dashboard_espanol_final_v4.py
 # El tablero de control definitivo, mejorado con IA, basado en el Diagnóstico Situacional de 2013 de la Cruz Roja Tijuana.
-# Esta versión está completa, sin abreviar, y traducida al español, con todos los errores corregidos.
+# Esta versión está completa, sin abreviar, totalmente traducida al español y con todos los errores corregidos.
 
 import streamlit as st
 import pandas as pd
@@ -28,8 +28,11 @@ ACCENT_COLOR_BAD = "#dc3545"
 # --- Carga y Simulación de Datos ---
 @st.cache_data
 def load_and_simulate_data():
-    """Carga todos los puntos de datos del informe de 2013 y simula una serie temporal diaria."""
-    original_data = {
+    """
+    Carga todos los puntos de datos del informe de 2013 y simula una serie temporal diaria para análisis avanzados.
+    Devuelve un único diccionario con datos agregados y de series temporales.
+    """
+    aggregated_data = {
         "population_projection": pd.DataFrame({"Año": [2005, 2010, 2015, 2020, 2030], "Población": [1410687, 1682160, 2005885, 2391915, 3401489]}),
         "marginalization_data": pd.DataFrame([{"Nivel": "Muy Alto", "Porcentaje": 1.0}, {"Nivel": "Alto", "Porcentaje": 15.0}, {"Nivel": "Medio", "Porcentaje": 44.0}, {"Nivel": "Bajo", "Porcentaje": 24.0}, {"Nivel": "Muy Bajo", "Porcentaje": 14.0}, {"Nivel": "N/A", "Porcentaje": 2.0}]),
         "funding_data": pd.DataFrame([{'Fuente': 'Donativos y Proyectos', 'Porcentaje': 53.2},{'Fuente': 'Servicios Generales', 'Porcentaje': 25.9},{'Fuente': 'Procuración de Fondos', 'Porcentaje': 12.6},{'Fuente': 'Capacitación', 'Porcentaje': 7.5},{'Fuente': 'Otros', 'Porcentaje': 0.8}]),
@@ -59,12 +62,18 @@ def load_and_simulate_data():
             {'Unidad': 196, 'Marca': 'Peugeot', 'CostoPorServicio': 110.00, 'Servicios': 663, 'CargaMantenimiento%': 16.9},
             {'Unidad': 183, 'Marca': 'Ford', 'CostoPorServicio': 100.28, 'Servicios': 1620, 'CargaMantenimiento%': 6.7},
             {'Unidad': 184, 'Marca': 'Ford', 'CostoPorServicio': 98.17, 'Servicios': 1164, 'CargaMantenimiento%': 1.9},
+        ]),
+        "material_cost_per_acuity": pd.DataFrame([
+            {'Gravedad': 'Fallecido al Arribar', 'Costo Material': 17.45},
+            {'Gravedad': 'Leve', 'Costo Material': 39.48},
+            {'Gravedad': 'No Crítico', 'Costo Material': 65.30},
+            {'Gravedad': 'Crítico (Trauma)', 'Costo Material': 338.49},
+            {'Gravedad': 'Crítico (Médico)', 'Costo Material': 389.25},
         ])
     }
     
     er_visits_monthly = [2829, 2548, 2729, 2780, 2306, 2775, 2744, 2774, 2754, 2934, 2985, 2852]
-    dates = pd.date_range(start="2012-10-01", end="2013-09-30")
-    daily_visits = []
+    dates = pd.date_range(start="2012-10-01", end="2013-09-30"); daily_visits = []
     for i, month_total in enumerate(er_visits_monthly):
         month_start = pd.to_datetime("2012-10-01") + pd.DateOffset(months=i); days_in_month = month_start.days_in_month
         daily_avg = month_total / days_in_month if days_in_month > 0 else 0
@@ -77,7 +86,7 @@ def load_and_simulate_data():
     daily_df['acuity'] = np.random.choice([1, 2, 3], len(daily_df), p=[0.7, 0.2, 0.1])
     daily_df['ai_risk_score'] = (daily_df['acuity'] * 20) + np.random.uniform(10, 35, len(daily_df))
     
-    return original_data, daily_df
+    return {"aggregated": original_data, "timeseries": daily_df}
 
 # --- AI & Statistical Functions ---
 @st.cache_data
@@ -102,7 +111,9 @@ def analyze_wait_time_drivers(df: pd.DataFrame):
     model = LinearRegression().fit(X, y); return pd.DataFrame({'Factor': X.columns, 'Impacto (min)': model.coef_}).sort_values('Impacto (min)', ascending=False)
 
 # --- Load Data ---
-original_data, daily_df = load_and_simulate_data()
+app_data = load_and_simulate_data()
+original_data = app_data['aggregated']
+daily_df = app_data['timeseries']
 
 # --- Dashboard UI ---
 st.image("https://cruzrojatijuana.org.mx/wp-content/uploads/2022/10/logo.png", width=250)
@@ -110,7 +121,10 @@ st.title("Centro de Mando Estratégico con IA: Cruz Roja Tijuana")
 st.markdown("_Un tablero digital definitivo que integra el diagnóstico de 2013 con análisis predictivo para máxima accionabilidad._")
 st.divider()
 
-tabs = st.tabs(["📈 **Resumen Ejecutivo**", "🔮 **Análisis Predictivo**", "🏙️ **Población y Contexto**", "💰 **Salud Financiera y Optimización**", "🚑 **Operaciones Prehospitalarias**", "🏥 **Servicios Hospitalarios**", "👥 **RRHH y Sentimiento**", "📋 **Recomendaciones**"])
+tabs = st.tabs([
+    "📈 **Resumen Ejecutivo**", "🔮 **Análisis Predictivo**", "🏙️ **Población y Contexto**", "💰 **Salud Financiera y Optimización**", 
+    "🚑 **Operaciones Prehospitalarias**", "🏥 **Servicios Hospitalarios**", "👥 **RRHH y Sentimiento**", "📋 **Recomendaciones**"
+])
 
 with tabs[0]:
     st.header("Hallazgos Clave y Riesgos Estratégicos (Informe 2013)")
@@ -177,20 +191,16 @@ with tabs[3]:
         st.markdown("#### Costos de Material por Gravedad del Paciente")
         df_mat = original_data['material_cost_per_acuity']
         fig_mat = px.bar(df_mat, x='Costo Material', y='Gravedad', orientation='h', title="Pacientes Críticos Impulsan Costos de Material", text='Costo Material'); fig_mat.update_traces(texttemplate='$%{text:,.2f}', textposition='inside', marker_color=PRIMARY_COLOR); fig_mat.update_layout(template=PLOTLY_TEMPLATE, xaxis_title="Costo Promedio de Material por Llamada (MXN)", yaxis_title=None); st.plotly_chart(fig_mat, use_container_width=True)
-        st.warning("**Accionabilidad:** Enfocar el control de inventario y la cadena de suministro en artículos de alto costo para cuidados críticos.")
 
 with tabs[4]:
     st.header("🚑 Operaciones Prehospitalarias")
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("Llamadas de Emergencia a C4")
-        st.plotly_chart(px.funnel(original_data['c4_call_summary'], x='Valor', y='Categoría', title="Solo 22% de las Llamadas al 066 son Emergencias Reales"), use_container_width=True)
+        st.subheader("Llamadas de Emergencia a C4"); st.plotly_chart(px.funnel(original_data['c4_call_summary'], x='Valor', y='Categoría', title="Solo 22% de las Llamadas al 066 son Emergencias Reales"), use_container_width=True)
     with col2:
-        st.subheader("Gravedad de Pacientes Prehospitalarios")
-        st.plotly_chart(px.pie(original_data['patient_acuity_prehospital'], names='Categoría', values='Porcentaje', title="67% de los Pacientes Atendidos son Leves"), use_container_width=True)
+        st.subheader("Gravedad de Pacientes Prehospitalarios"); st.plotly_chart(px.pie(original_data['patient_acuity_prehospital'], names='Categoría', values='Porcentaje', title="67% de los Pacientes Atendidos son Leves"), use_container_width=True)
     st.divider()
-    st.subheader("Tiempo de Respuesta por Base de Ambulancias")
-    st.plotly_chart(px.bar(original_data['response_time_by_base'].sort_values("Tiempo Promedio (min)"), y="Base", x="Tiempo Promedio (min)", orientation='h', title="Tiempos de Respuesta Varían Significativamente por Base", text="Tiempo Promedio (min)").update_traces(texttemplate='%{text:.1f} min', textposition='inside'), use_container_width=True)
+    st.subheader("Tiempo de Respuesta por Base de Ambulancias"); st.plotly_chart(px.bar(original_data['response_time_by_base'].sort_values("Tiempo Promedio (min)"), y="Base", x="Tiempo Promedio (min)", orientation='h', title="Tiempos de Respuesta Varían Significativamente por Base", text="Tiempo Promedio (min)").update_traces(texttemplate='%{text:.1f} min', textposition='inside'), use_container_width=True)
 
 with tabs[5]:
     st.header("🏥 Servicios Hospitalarios")
