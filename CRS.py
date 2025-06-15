@@ -1,4 +1,4 @@
-# cruz_roja_dashboard_espanol_final_v4.py
+# cruz_roja_dashboard_platinum_final_v8_complete.py
 # El tablero de control definitivo, mejorado con IA, basado en el Diagnóstico Situacional de 2013 de la Cruz Roja Tijuana.
 # Esta versión está completa, sin abreviar, totalmente traducida al español y con todos los errores corregidos.
 
@@ -32,7 +32,7 @@ def load_and_simulate_data():
     Carga todos los puntos de datos del informe de 2013 y simula una serie temporal diaria para análisis avanzados.
     Devuelve un único diccionario con datos agregados y de series temporales.
     """
-    aggregated_data = {
+    original_data = {
         "population_projection": pd.DataFrame({"Año": [2005, 2010, 2015, 2020, 2030], "Población": [1410687, 1682160, 2005885, 2391915, 3401489]}),
         "marginalization_data": pd.DataFrame([{"Nivel": "Muy Alto", "Porcentaje": 1.0}, {"Nivel": "Alto", "Porcentaje": 15.0}, {"Nivel": "Medio", "Porcentaje": 44.0}, {"Nivel": "Bajo", "Porcentaje": 24.0}, {"Nivel": "Muy Bajo", "Porcentaje": 14.0}, {"Nivel": "N/A", "Porcentaje": 2.0}]),
         "funding_data": pd.DataFrame([{'Fuente': 'Donativos y Proyectos', 'Porcentaje': 53.2},{'Fuente': 'Servicios Generales', 'Porcentaje': 25.9},{'Fuente': 'Procuración de Fondos', 'Porcentaje': 12.6},{'Fuente': 'Capacitación', 'Porcentaje': 7.5},{'Fuente': 'Otros', 'Porcentaje': 0.8}]),
@@ -239,7 +239,7 @@ with tabs[6]:
         st.caption("Un alto nivel de horas extra es un indicador principal de agotamiento y rotación de personal.")
 
 with tabs[7]:
-    st.header("📋 Resumen de Recomendaciones del Informe")
+    st.header("📋 Recomendaciones Estratégicas del Informe")
     st.markdown("Una lista completa de recomendaciones accionables a corto y largo plazo propuestas en el informe de 2013.")
     st.subheader("Prioridades a Corto Plazo (Implementar en < 1 Año)")
     with st.expander("Mostrar Todas las Recomendaciones a Corto Plazo"):
