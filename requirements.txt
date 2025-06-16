@@ -1,6 +1,9 @@
 streamlit
 pandas
 plotly
+scipy
 scikit-learn
 prophet
 datetime
+folium
+streamlit-folium
