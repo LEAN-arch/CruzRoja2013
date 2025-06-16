@@ -16,7 +16,7 @@ from sklearn.ensemble import IsolationForest
 # --- Configuración de la Página ---
 st.set_page_config(
     page_title="Cruz Roja Tijuana - Centro de Mando Estratégico con IA",
-    page_icon="➕",
+    page_icon="🏥",
     layout="wide",
 )
 
