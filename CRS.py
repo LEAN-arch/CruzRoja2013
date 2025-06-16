@@ -1,4 +1,4 @@
-# cruz_roja_dashboard_platinum_final_v8_complete.py
+# cruz_roja_dashboard_platinum_final_v11_complete.py
 # El tablero de control definitivo, mejorado con IA, basado en el Diagnóstico Situacional de 2013 de la Cruz Roja Tijuana.
 # Esta versión está completa, sin abreviar, totalmente traducida al español y con todos los errores corregidos.
 
@@ -10,10 +10,12 @@ import numpy as np
 from prophet import Prophet
 from datetime import timedelta
 from sklearn.linear_model import LinearRegression
+from sklearn.cluster import KMeans
+from sklearn.ensemble import IsolationForest
 
 # --- Configuración de la Página ---
 st.set_page_config(
-    page_title="Cruz Roja Tijuana - Centro de Mando Estratégico",
+    page_title="Cruz Roja Tijuana - Centro de Mando Estratégico con IA",
     page_icon="➕",
     layout="wide",
 )
@@ -27,7 +29,7 @@ ACCENT_COLOR_BAD = "#dc3545"
 
 # --- Carga y Simulación de Datos ---
 @st.cache_data
-def load_and_simulate_data():
+def load_and_simulate_all_data():
     """
     Carga todos los puntos de datos del informe de 2013 y simula una serie temporal diaria para análisis avanzados.
     Devuelve un único diccionario con datos agregados y de series temporales.
@@ -53,22 +55,10 @@ def load_and_simulate_data():
         "staff_sentiment": {'strengths': {'Paramédico': 'Servicios Ofrecidos (59%)'},'opportunities': {'Paramédico': 'Salario (45%)'},'motivation': {'Paramédico': 'Salario (69%)'}},
         "patient_sentiment": {'satisfaction_score': 8.6, 'main_reason': 'Accidente (50%)', 'improvement_area': 'Información y Cortesía (26% cada uno)'},
         "ambulance_fleet_analysis": pd.DataFrame([
-            {'Unidad': 175, 'Marca': 'Mercedes', 'CostoPorServicio': 178.34, 'Servicios': 722, 'CargaMantenimiento%': 87.4},
-            {'Unidad': 163, 'Marca': 'Volkswagen', 'CostoPorServicio': 165.96, 'Servicios': 638, 'CargaMantenimiento%': 78.3},
-            {'Unidad': 169, 'Marca': 'Volkswagen', 'CostoPorServicio': 157.78, 'Servicios': 1039, 'CargaMantenimiento%': 25.7},
-            {'Unidad': 170, 'Marca': 'Volkswagen', 'CostoPorServicio': 130.41, 'Servicios': 1048, 'CargaMantenimiento%': 25.6},
-            {'Unidad': 176, 'Marca': 'Mercedes', 'CostoPorServicio': 120.73, 'Servicios': 676, 'CargaMantenimiento%': 97.1},
-            {'Unidad': 167, 'Marca': 'Nissan', 'CostoPorServicio': 114.04, 'Servicios': 677, 'CargaMantenimiento%': 2.3},
-            {'Unidad': 196, 'Marca': 'Peugeot', 'CostoPorServicio': 110.00, 'Servicios': 663, 'CargaMantenimiento%': 16.9},
-            {'Unidad': 183, 'Marca': 'Ford', 'CostoPorServicio': 100.28, 'Servicios': 1620, 'CargaMantenimiento%': 6.7},
-            {'Unidad': 184, 'Marca': 'Ford', 'CostoPorServicio': 98.17, 'Servicios': 1164, 'CargaMantenimiento%': 1.9},
-        ]),
-        "material_cost_per_acuity": pd.DataFrame([
-            {'Gravedad': 'Fallecido al Arribar', 'Costo Material': 17.45},
-            {'Gravedad': 'Leve', 'Costo Material': 39.48},
-            {'Gravedad': 'No Crítico', 'Costo Material': 65.30},
-            {'Gravedad': 'Crítico (Trauma)', 'Costo Material': 338.49},
-            {'Gravedad': 'Crítico (Médico)', 'Costo Material': 389.25},
+            {'Unidad': 175, 'Marca': 'Mercedes', 'CostoPorServicio': 178.34, 'Servicios': 722, 'CargaMantenimiento%': 87.4, 'Edad (Años)': 6},
+            {'Unidad': 163, 'Marca': 'Volkswagen', 'CostoPorServicio': 165.96, 'Servicios': 638, 'CargaMantenimiento%': 78.3, 'Edad (Años)': 4},
+            {'Unidad': 169, 'Marca': 'Volkswagen', 'CostoPorServicio': 157.78, 'Servicios': 1039, 'CargaMantenimiento%': 25.7, 'Edad (Años)': 2},
+            {'Unidad': 183, 'Marca': 'Ford', 'CostoPorServicio': 100.28, 'Servicios': 1620, 'CargaMantenimiento%': 6.7, 'Edad (Años)': 1},
         ])
     }
     
@@ -84,6 +74,7 @@ def load_and_simulate_data():
     daily_df['diagnosis'] = np.random.choice(diagnoses, len(daily_df), p=[0.30, 0.40, 0.05, 0.05, 0.05, 0.15])
     daily_df['wait_time_min'] = np.maximum(5, daily_df['visits'] * 0.2 + np.random.normal(5, 5, len(daily_df)))
     daily_df['acuity'] = np.random.choice([1, 2, 3], len(daily_df), p=[0.7, 0.2, 0.1])
+    daily_df['paramedic_calls'] = np.random.randint(4, 8, len(daily_df))
     daily_df['ai_risk_score'] = (daily_df['acuity'] * 20) + np.random.uniform(10, 35, len(daily_df))
     
     return {"aggregated": original_data, "timeseries": daily_df}
@@ -255,6 +246,6 @@ with tabs[7]:
         st.markdown("""
         - **Integración del Sistema:** Formar una comisión estatal para la gestión de desastres que integre todos los servicios médicos de emergencia.
         - **Financiamiento para Desastres:** Crear mecanismos para movilizar fondos dedicados a la preparación para la respuesta a desastres.
-        - **Seguridad Hospitalaria:** Implementar el programa "Hospital Seguro" para abordar la crítica calificación de seguridad 'C'.
+        - **Seguridad Hospitalaria:** Implementar el programa "Hospital Seguro" para abordar la crítica calificación de seguridad nivel 'C'.
         - **Vinculación Comunitaria:** Desarrollar programas de educación pública sobre el uso adecuado de los servicios de emergencia.
         """)
