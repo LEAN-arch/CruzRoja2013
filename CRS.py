@@ -1,6 +1,6 @@
-# cruz_roja_dashboard_platinum_final_v13_enriched.py
+# cruz_roja_dashboard_platinum_final_v13.1_fixed.py
 # El tablero de control definitivo, mejorado con IA, basado en el Diagnóstico Situacional de 2013 de la Cruz Roja Tijuana.
-# Esta versión ha sido enriquecida por un SME con ~20 análisis avanzados y una hoja de ruta estratégica.
+# Esta versión ha sido enriquecida por un SME y corrige el error NotFittedError en el modelo de detección de anomalías.
 
 import streamlit as st
 import pandas as pd
@@ -32,6 +32,23 @@ ACCENT_COLOR_GOOD = "#28a745"
 ACCENT_COLOR_WARN = "#ffc107"
 ACCENT_COLOR_BAD = "#dc3545"
 
+# --- Funciones de IA y Estadísticas (EXPANDIDAS) ---
+
+# CORRECTED FUNCTION: The function is defined here, before it is called, and includes the .fit() method.
+@st.cache_data
+def detect_anomalies(_df: pd.DataFrame, column: str, contamination: float = 0.02) -> pd.DataFrame:
+    """Detecta anomalías en una serie temporal usando Isolation Forest."""
+    model = IsolationForest(contamination=contamination, random_state=42)
+    df_iso = _df[[column]].copy()
+    
+    # --- THE FIX IS HERE ---
+    # You must FIT the model to the data before you can PREDICT with it.
+    model.fit(df_iso)
+    
+    _df['anomaly'] = model.predict(df_iso)
+    return _df
+
+
 # --- Carga y Simulación de Datos (MASIVAMENTE EXPANDIDO) ---
 @st.cache_data
 def load_and_simulate_all_data():
@@ -40,7 +57,6 @@ def load_and_simulate_all_data():
     Incluye datos de flota, clínicos, de personal y operativos para potenciar los modelos de IA.
     """
     original_data = {
-        # ... (datos originales sin cambios) ...
         "population_projection": pd.DataFrame({"Año": [2005, 2010, 2015, 2020, 2030], "Población": [1410687, 1682160, 2005885, 2391915, 3401489]}),
         "marginalization_data": pd.DataFrame([{"Nivel": "Muy Alto", "Porcentaje": 1.0}, {"Nivel": "Alto", "Porcentaje": 15.0}, {"Nivel": "Medio", "Porcentaje": 44.0}, {"Nivel": "Bajo", "Porcentaje": 24.0}, {"Nivel": "Muy Bajo", "Porcentaje": 14.0}, {"Nivel": "N/A", "Porcentaje": 2.0}]),
         "funding_data": pd.DataFrame([{'Fuente': 'Donativos y Proyectos', 'Porcentaje': 53.2},{'Fuente': 'Servicios Generales', 'Porcentaje': 25.9},{'Fuente': 'Procuración de Fondos', 'Porcentaje': 12.6},{'Fuente': 'Capacitación', 'Porcentaje': 7.5},{'Fuente': 'Otros', 'Porcentaje': 0.8}]),
@@ -74,7 +90,6 @@ def load_and_simulate_all_data():
     er_visits_monthly = [2829, 2548, 2729, 2780, 2306, 2775, 2744, 2774, 2754, 2934, 2985, 2852]
     dates = pd.date_range(start="2012-10-01", end="2013-09-30")
     daily_visits = []
-    # ... (código de simulación de visitas sin cambios) ...
     for i, month_total in enumerate(er_visits_monthly):
         month_start = pd.to_datetime("2012-10-01") + pd.DateOffset(months=i)
         days_in_month = month_start.days_in_month
@@ -112,15 +127,6 @@ def load_and_simulate_all_data():
 
     return {"aggregated": original_data, "timeseries": daily_df, "c4_hourly": c4_hourly_df}
 
-# --- Funciones de IA y Estadísticas (EXPANDIDAS) ---
-
-@st.cache_data
-def detect_anomalies(_df: pd.DataFrame, column: str, contamination: float = 0.02) -> pd.DataFrame:
-    """Detecta anomalías en una serie temporal usando Isolation Forest."""
-    model = IsolationForest(contamination=contamination, random_state=42)
-    df_iso = _df[[column]].copy()
-    _df['anomaly'] = model.predict(df_iso)
-    return _df
 
 @st.cache_data
 def get_prophet_forecast(_df, days_to_forecast=30, hourly=False):
@@ -207,7 +213,6 @@ def build_triage_tree(_df):
     return tree_rules
 
 
-# --- (Funciones existentes como get_prophet_forecast, analyze_wait_time_drivers, etc. se mantienen) ---
 @st.cache_data
 def predict_resource_hotspots(_df: pd.DataFrame, days_to_predict=7):
     """Predice qué recursos serán más necesarios en la próxima semana."""
@@ -252,7 +257,6 @@ df_fleet = original_data['ambulance_fleet_analysis']
 
 # --- UI del Dashboard ---
 with st.sidebar:
-    # ... (sidebar sin cambios) ...
     st.image("https://cruzrojatijuana.org.mx/wp-content/uploads/2022/10/logo.png", width=150)
     st.title("Acerca de este Tablero")
     st.info(
@@ -328,7 +332,6 @@ with tabs[0]:
 with tabs[1]:
     st.header("🔮 Central de Análisis Predictivo (Análisis #2, #7, #4)")
     st.subheader("Pronóstico de Demanda de Pacientes y Detección de Anomalías")
-    # ... (código del pronóstico prophet igual que en la versión anterior) ...
     forecast_days = st.slider("Días a Pronosticar:", 7, 90, 30, key="forecast_days", help="Seleccione el horizonte de tiempo para el pronóstico de demanda de pacientes.")
     
     forecast_df = get_prophet_forecast(daily_df, forecast_days)
@@ -445,7 +448,7 @@ with tabs[3]:
     st.plotly_chart(fig_calls, use_container_width=True)
     st.info("**Acción:** Colaborar con C4 para lanzar campañas de concientización pública enfocadas en las horas pico de llamadas de broma (ej. 16:00-22:00) para reducir la carga sobre los despachadores.", icon="🎯")
     st.divider()
-    # ... (resto del contenido original de la pestaña) ...
+    
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Desglose de Llamadas a C4 (066)")
@@ -512,7 +515,6 @@ with tabs[5]:
     st.subheader("Análisis #11: Inferencia de Riesgo de Agotamiento (Burnout)")
     st.markdown("El agotamiento del personal es costoso y perjudicial. Al combinar datos operativos (llamadas por turno) y de sentimiento (encuestas), podemos crear un 'Índice de Riesgo de Burnout' para intervenir proactivamente.")
     
-    # Simulación simple para el índice
     staff_df = pd.DataFrame({
         'Paramédico ID': [f"P-{i:03}" for i in range(20)],
         'Llamadas/Turno (Promedio)': np.random.normal(5, 1.5, 20).round(1),
@@ -540,12 +542,9 @@ with tabs[6]:
     A continuación se muestra un mapa de ejemplo con hotspots simulados y una ubicación de base optimizada.
     """)
 
-    # Simulación de un mapa para la demostración
-    # Coordenadas aproximadas del centro de Tijuana
     tj_center = [32.5149, -117.0382]
     m = folium.Map(location=tj_center, zoom_start=12)
 
-    # Simular hotspots
     hotspots = np.random.normal(loc=tj_center, scale=[0.05, 0.05], size=(5, 2))
     for lat, lon in hotspots:
         folium.Circle(
@@ -558,7 +557,6 @@ with tabs[6]:
         ).add_to(m)
         folium.Marker(location=[lat, lon], popup="Hotspot de Incidentes", icon=folium.Icon(color='red', icon='info-sign')).add_to(m)
 
-    # Simular base optimizada
     optimal_base = np.mean(hotspots, axis=0)
     folium.Marker(
         location=optimal_base,
