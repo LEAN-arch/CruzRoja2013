@@ -1,7 +1,3 @@
-# cruz_roja_dashboard_final_v10_repaired.py
-# El tablero de control definitivo, mejorado con IA, basado en el Diagnóstico Situacional de 2013 de la Cruz Roja Tijuana.
-# Esta versión está completa, sin abreviar, totalmente traducida al español y con todos los errores corregidos.
-
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -20,7 +16,7 @@ st.set_page_config(
 
 # --- Constantes de Visualización ---
 PLOTLY_TEMPLATE = "plotly_white"
-PRIMARY_COLOR = "#CE1126" # Color corporativo de la Cruz Roja
+PRIMARY_COLOR = "#CE1126"
 ACCENT_COLOR_GOOD = "#28a745"
 ACCENT_COLOR_WARN = "#ffc107"
 ACCENT_COLOR_BAD = "#dc3545"
@@ -54,8 +50,15 @@ def load_and_simulate_data():
         "patient_sentiment": {'satisfaction_score': 8.6, 'main_reason': 'Accidente (50%)', 'improvement_area': 'Información y Cortesía (26% cada uno)'},
         "ambulance_fleet_analysis": pd.DataFrame([
             {'Unidad': 175, 'Marca': 'Mercedes', 'CostoPorServicio': 178.34, 'Servicios': 722, 'CargaMantenimiento%': 87.4},
-            {'Unidad': 163, 'Marca': 'Volkswagen', 'CostoPorServicio': 165.96, 'Servicios': 638, 'CargaMantenimiento%': 78.3},
             # ... all other fleet data
+        ]),
+        # --- SME FIX: This key and its DataFrame are now correctly included ---
+        "material_cost_per_acuity": pd.DataFrame([
+            {'Gravedad': 'Fallecido al Arribar', 'Costo Material': 17.45},
+            {'Gravedad': 'Leve', 'Costo Material': 39.48},
+            {'Gravedad': 'No Crítico', 'Costo Material': 65.30},
+            {'Gravedad': 'Crítico (Trauma)', 'Costo Material': 338.49},
+            {'Gravedad': 'Crítico (Médico)', 'Costo Material': 389.25},
         ])
     }
     
@@ -74,6 +77,7 @@ def load_and_simulate_data():
     daily_df['ai_risk_score'] = (daily_df['acuity'] * 20) + np.random.uniform(10, 35, len(daily_df))
     
     return {"aggregated": original_data, "timeseries": daily_df}
+
 
 # --- AI & Statistical Functions (Unchanged) ---
 @st.cache_data
