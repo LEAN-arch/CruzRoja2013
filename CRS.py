@@ -21,7 +21,7 @@ from streamlit_folium import st_folium
 # --- Configuración de la Página ---
 st.set_page_config(
     page_title="Cruz Roja Tijuana - Centro de Mando Estratégico con IA",
-    page_icon="➕",
+    page_icon="🏥",
     layout="wide",
 )
 
